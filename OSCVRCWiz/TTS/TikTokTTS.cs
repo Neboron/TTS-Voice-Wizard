@@ -26,6 +26,7 @@ using System.Diagnostics;
 using Amazon.Polly;
 using Polly.Caching;
 using OSCVRCWiz.Resources;
+using System.Text.RegularExpressions;
 
 namespace OSCVRCWiz.TTS
 {
@@ -33,56 +34,68 @@ namespace OSCVRCWiz.TTS
     {
        // public static WaveOut TikTokOutput=null;
 
-        public static async Task TikTokTextAsSpeech(TTSMessageQueue.TTSMessage TTSMessageQueued, CancellationToken ct = default)
+        public static async Task TikTokTextAsSpeech(TTSMessageQueue.TTSMessage TTSMessageQueued, CancellationToken ct = default, string lang = "[DEFAULT]")
         {
 
             // if ("tiktokvoice.mp3" == null)
             //   throw new NullReferenceException("Output path is null");
             //text = FormatInputText(text);
 
-           
-           
-            byte[] result = null;
-            try
+
+            string[] sentences = Regex.Split(TTSMessageQueued.text, @"(?<=[\.!\?])\s+");
+
+            foreach (string sentence in sentences)
             {
-                result = await CallTikTokAPIAsync(TTSMessageQueued.text, TTSMessageQueued.Voice);
-            }
-            catch (Exception ex)
-            {
-                OutputText.outputLog("[TikTok TTS Error: " + ex.Message + "]", Color.Red);
-             
 
-            }
-
-
-            try
-            {
-                //  File.WriteAllBytes("TikTokTTS.mp3", result);          
-                //  Task.Run(() => PlayAudioHelper());
-
-                MemoryStream memoryStream = new MemoryStream(result);
-
-
-
-                AudioDevices.playMp3Stream(memoryStream, TTSMessageQueued, ct);
-                memoryStream.Dispose();
-
-
-
-
-
-
-
-
-            }
-            catch (Exception ex)
-            {
-                OutputText.outputLog("[TikTok TTS *AUDIO* Error: " + ex.Message + "]", Color.Red);
-                if (ex.Message.Contains("An item with the same key has already been added"))
+                byte[] result = null;
+                try
                 {
-                    OutputText.outputLog("[Looks like you may have 2 audio devices with the same name which causes an error in TTS Voice Wizard. To fix this go to Control Panel > Sound > right click on one of the devices > properties > rename the device.]", Color.DarkOrange);
+                    if (lang == "[DEFAULT]")
+                    {
+                        result = await CallTikTokAPIAsync(sentence, TTSMessageQueued.Voice);
+                    }
+                    else if (lang == "[EN]")
+                    {
+                        result = await CallTikTokAPIAsync(sentence, "en_au_001");
+                    }
                 }
-                TTSMessageQueue.PlayNextInQueue();
+                catch (Exception ex)
+                {
+                    OutputText.outputLog("[TikTok TTS Error: " + ex.Message + "]", Color.Red);
+
+
+                }
+
+
+                try
+                {
+                    //  File.WriteAllBytes("TikTokTTS.mp3", result);          
+                    //  Task.Run(() => PlayAudioHelper());
+
+                    MemoryStream memoryStream = new MemoryStream(result);
+
+
+
+                    AudioDevices.playMp3Stream(memoryStream, TTSMessageQueued, ct);
+                    memoryStream.Dispose();
+
+
+
+
+
+
+
+
+                }
+                catch (Exception ex)
+                {
+                    OutputText.outputLog("[TikTok TTS *AUDIO* Error: " + ex.Message + "]", Color.Red);
+                    if (ex.Message.Contains("An item with the same key has already been added"))
+                    {
+                        OutputText.outputLog("[Looks like you may have 2 audio devices with the same name which causes an error in TTS Voice Wizard. To fix this go to Control Panel > Sound > right click on one of the devices > properties > rename the device.]", Color.DarkOrange);
+                    }
+                    TTSMessageQueue.PlayNextInQueue();
+                }
             }
             //System.Diagnostics.Debug.WriteLine("tiktok speech ran"+result.ToString());
         }

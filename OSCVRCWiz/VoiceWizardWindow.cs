@@ -33,6 +33,9 @@ using System.Collections;
 using CoreOSC;
 using System.Runtime.InteropServices;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
+using System.Text.RegularExpressions;
+using System.Text;
+using Windows.UI.Popups;
 
 
 
@@ -875,8 +878,40 @@ namespace OSCVRCWiz
             Task.Run(() => MainDoSpeechTTS());
 
         }
+
+
+
+
+
         public async void MainDoTTS(TTSMessageQueue.TTSMessage TTSMessageQueued)
         {
+            bool NikoraRequest = false;
+            OutputText.outputLog("[Nikora says: " + TTSMessageQueued.text + "]", Color.Blue);
+            if (String.IsNullOrEmpty(TTSMessageQueued.text))
+            {
+                OutputText.outputLog("[Got empty string", Color.Red);
+            }
+            else
+            {
+                string[] namesToReplace = new string[] { "Cortana", "Nicora", "Nicola" };
+                foreach (string s in namesToReplace)
+                {
+                    string pattern = String.Format(@"\b{0}\b", s);
+                    TTSMessageQueued.text = Regex.Replace(TTSMessageQueued.text, pattern, "Nikora", RegexOptions.None);
+                }
+                OutputText.outputLog("[Nikora says replaced: " + TTSMessageQueued.text + "]", Color.Blue);
+
+                // var firstWord = Regex.Match(TTSMessageQueued.text, @"^([\w\-]+)");
+                if (TTSMessageQueued.text.Contains("Nikora"))
+                {
+                    NikoraRequest = true;
+                    OutputText.outputLog("[Got Nikora request", Color.Green);
+                    String answer = await NikoraAssistant.OpenAI_Main.NikoraRequest(TTSMessageQueued.text);
+                    OutputText.outputLog("[Nikora says: " + answer + "]", Color.YellowGreen);
+                    TTSMessageQueued.text = answer;
+                }
+            }
+
             try
             {
                 if (IsHandleCreated)
@@ -952,6 +987,10 @@ namespace OSCVRCWiz
                                     translationMethod = "Azure Translation";
                                 }
 
+                                if (NikoraRequest)
+                                {
+                                    newText = TTSMessageQueued.text;
+                                }
 
 
                                 if (rjToggleButtonVoiceWhatLang.Checked == true)
@@ -1044,7 +1083,15 @@ namespace OSCVRCWiz
                                         TTSMessageQueued.text = voiceWizardAPITranslationString;
                                     }
                                 }
-                                Task.Run(() => TikTokTTS.TikTokTextAsSpeech(TTSMessageQueued, speechCt.Token));
+                                if (NikoraRequest)
+                                {
+                                    Task.Run(() => TikTokTTS.TikTokTextAsSpeech(TTSMessageQueued, speechCt.Token, "[EN]")); //turning off TTS for now
+                                }
+                                else
+                                {
+                                    Task.Run(() => TikTokTTS.TikTokTextAsSpeech(TTSMessageQueued, speechCt.Token)); //turning off TTS for now
+                                }
+                                
                                 break;
 
                             case "NovelAI":
@@ -1195,7 +1242,7 @@ namespace OSCVRCWiz
                         SpotifyAddon.pauseSpotify = true;
                         Task.Run(() => OutputText.outputVRChat(writeText, "tts"));
                     }
-                    if (rjToggleButtonChatBox.Checked == true && rjToggleButtonNoTTSChat.Checked == false)
+                    if (rjToggleButtonChatBox.Checked == true && rjToggleButtonNoTTSChat.Checked == false && !NikoraRequest)
                     {
                         OSCListener.pauseBPM = true;
                         SpotifyAddon.pauseSpotify = true;

@@ -113,8 +113,13 @@ namespace OSCVRCWiz.Addons
 
                         }
 
+                        if (messageReceived.Address == "/avatar/parameters/NikoraMicActivate")
+                        {
+                            OutputText.outputLog("Parameter Received!" + messageReceived.Address, Color.Green);
+                            Task.Run(() => VoiceWizardWindow.MainFormGlobal.MainDoSpeechTTS());
+                        }
 
-                        if (messageReceived.Address == "/avatar/parameters/averageTrackerBattery")
+                            if (messageReceived.Address == "/avatar/parameters/averageTrackerBattery")
                         {
 
                             if (VoiceWizardWindow.MainFormGlobal.rjToggleButtonForwardData.Checked == true)

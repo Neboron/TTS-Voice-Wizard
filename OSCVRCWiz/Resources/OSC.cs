@@ -79,6 +79,7 @@ namespace OSCVRCWiz.Resources
            }*/
         public static void OSCLegacyVRChatListener()//no in use remove apon release of oscquery
         {
+            OutputText.outputLog("[VRChat OSC Listener Activated CHECK]", Color.Green);
             //  int port = 9001;//VRChats default UDP // ONLY ONE APP CAN LISTEN HERE
 
 
