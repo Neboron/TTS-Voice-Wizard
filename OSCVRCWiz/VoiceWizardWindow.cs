@@ -47,7 +47,7 @@ namespace OSCVRCWiz
 
     public partial class VoiceWizardWindow : Form
     {
-        public static string currentVersion = "1.3.5";
+        public static string currentVersion = "1.3.6.1";
         // string releaseDate = "May 7, 2023";
         //   string versionBuild = "x64"; //update when converting to x86/x64
         //string versionBuild = "x86"; //update when converting to x86/x64
@@ -846,10 +846,12 @@ namespace OSCVRCWiz
 
                     Task.Run(() =>
                      {
-                         string sound = @"sounds\TTSButton.wav";
+                         string sound = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sounds", "TTSButton.wav");
+                        // string sound = @"sounds\TTSButton.wav";
 
                          var soundPlayer = new SoundPlayer(sound);
                          soundPlayer.Play();
+                         Thread.Sleep(1000);
                      });
                 }
                 catch (Exception ex)
@@ -1306,7 +1308,8 @@ namespace OSCVRCWiz
 
                     Task.Run(() =>
                     {
-                        string sound = @"sounds\speechButton.wav";
+                     //   string sound = @"sounds\speechButton.wav";
+                        string sound = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sounds", "speechButton.wav");
                         //   if(rjToggleButtonAprilFools.Checked == true)
                         //    {
                         //       sound = @"sounds\metalPipe.wav";
@@ -1314,6 +1317,7 @@ namespace OSCVRCWiz
                         var soundPlayer = new SoundPlayer(sound);
 
                         soundPlayer.Play();
+                        Thread.Sleep(1000);
                     });
 
                 }
